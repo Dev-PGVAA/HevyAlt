@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  email    String   @unique
+  name     String
+  password String?
+  avatar   String?  @default("https://localhost:4200/uploads/default/default_avatar.jpeg") //change after deploy
+  birthday DateTime @default(now())
+  role     Role     @default(USER)
+  sex      Sex      @default(NOT_SPECIFICATED)
+
+  @@map("user")
+}
+
+enum Role {
+  USER
+  PREMIUM
+  ADMIN
+}
+
+enum Sex {
+  NOT_SPECIFICATED
+  MALE
+  FEMALE
+}
