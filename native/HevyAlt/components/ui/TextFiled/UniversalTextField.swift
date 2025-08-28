@@ -4,10 +4,8 @@ struct UniversalTextField: View {
     @Binding var text: String
     var placeholder: String
     var isSecure: Bool = false
-    @State private var isTextVisible: Bool = false
+    var isShowPasswordErrors: Bool = false
     var errorMessage: String?
-
-    
 
     var body: some View {
         if isSecure {
@@ -15,7 +13,8 @@ struct UniversalTextField: View {
                 text: $text,
                 placeholder: placeholder,
                 isSecure: true,
-                errorMessage: errorMessage
+                errorMessage: errorMessage,
+                isShowPasswordErrors: isShowPasswordErrors
             )
         } else {
             TextFieldComponent(
@@ -34,6 +33,7 @@ struct TextFieldComponent: View {
     var isSecure: Bool = false
     @State private var isTextVisible: Bool = false
     var errorMessage: String?
+    var isShowPasswordErrors: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -48,6 +48,7 @@ struct TextFieldComponent: View {
                             .background(Color(hex: "#181818"))
                     } else {
                         TextField("", text: $text)
+                            .textContentType(.newPassword)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                             .foregroundColor(Color.white)
@@ -78,9 +79,9 @@ struct TextFieldComponent: View {
             .cornerRadius(10)
             .frame(height: 56)
 
-            if let error = errorMessage, !error.isEmpty {
+            if let error = errorMessage, !error.isEmpty, isShowPasswordErrors {
                 Text(error)
-                    .foregroundColor(Color.red)
+                    .foregroundColor(Color(hex: "#dc2626"))
                     .transition(.asymmetric(insertion: .move(edge: .leading),
                                             removal: .move(edge: .trailing)))
                     .animation(.spring(response: 0.4, dampingFraction: 0.75), value: text)

@@ -16,7 +16,7 @@ model User {
   email    String   @unique
   name     String
   password String?
-  avatar   String?  @default("https://localhost:4200/uploads/default/default_avatar.jpeg") //change after deploy
+  avatar   String?  @default("http://localhost:4200/uploads/default_avatar.jpeg") //change after deploy
   birthday DateTime @default(now())
   role     Role     @default(USER)
   sex      Sex      @default(NOT_SPECIFICATED)

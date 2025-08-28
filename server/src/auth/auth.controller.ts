@@ -2,6 +2,7 @@ import {
 	Body,
 	Controller,
 	HttpCode,
+	Logger,
 	Post,
 	Req,
 	Res,
@@ -24,9 +25,11 @@ export class AuthController {
 		@Body() dto: AuthLoginDto,
 		@Res({ passthrough: true }) res: Response
 	) {
+		Logger.debug(dto)
 		const { refreshToken, ...response } = await this.authService.login(dto)
 		this.authService.addRefreshTokenToResponse(res, refreshToken)
 
+		Logger.debug(response)
 		return response
 	}
 
@@ -37,9 +40,11 @@ export class AuthController {
 		@Body() dto: AuthRegisterDto,
 		@Res({ passthrough: true }) res: Response
 	) {
+		Logger.debug(dto)
 		const { refreshToken, ...response } = await this.authService.register(dto)
 		this.authService.addRefreshTokenToResponse(res, refreshToken)
 
+		Logger.debug(response)
 		return response
 	}
 

@@ -10,18 +10,29 @@ struct AuthView: View {
 
     @State var typeOfAuth: AuthType = .main
 
+	@State private var keyboardIsShown = false
+    private let keyboardWillShow = NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
+    private let keyboardWillHide = NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                Image("auth-banner")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(height: UIScreen.main.bounds.height * 0.45)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-                    .ignoresSafeArea(edges: .top)
+
+              Image("auth-banner")
+                  .resizable()
+                  .scaledToFill()
+                  .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.45)
+                  .clipped() // Обрезаем лишнее по размеру рамки
+                  .overlay(
+                      keyboardIsShown ?
+                      Color.black.opacity(0.4)
+                          .transition(.opacity)
+                      : nil
+                  )
+                  .ignoresSafeArea(edges: .top)
                 Spacer()
             }
+
             VStack(alignment: .leading) {
 								VStack(alignment: .leading) {
 									Image("Logo")
@@ -67,6 +78,16 @@ struct AuthView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             .padding(.horizontal, 40)
             .padding(.bottom, 20)
+        }
+        .onReceive(keyboardWillShow) { _ in
+            withAnimation {
+                keyboardIsShown = true
+            }
+        }
+        .onReceive(keyboardWillHide) { _ in
+            withAnimation {
+                keyboardIsShown = false
+            }
         }
     }
 }

@@ -48,7 +48,7 @@ export class AuthService {
 		}
 	}
 
-	async issueTokens(userId: string, role?: Role) {
+	issueTokens(userId: string, role?: Role) {
 		const data = { id: userId, role }
 
 		const accessToken = this.jwt.sign(data, {
@@ -56,7 +56,7 @@ export class AuthService {
 		})
 
 		const refreshToken = this.jwt.sign(data, {
-			expiresIn: '7d'
+			expiresIn: '30d'
 		})
 
 		return { accessToken, refreshToken }
