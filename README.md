@@ -20,7 +20,7 @@
 
 ## Технологии
 
-- **Frontend:** SwiftUI
+- **Frontend:** Flutter
 - **Backend:** Node.js, NestJs, PostgresSQL
 - **Аутентификация:** JWT
 
@@ -72,10 +72,8 @@ npm run dev
 
 ```bash
 cd native
-open HevyAlt.xcworkspace
+flutter run
 ```
-
-Запустите проект через Xcode.
 
 ## Вклад
 
