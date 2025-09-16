@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/auth_provider.dart';
 import '../../widgets/text_filed/password_validator.dart';
 import '../../widgets/text_filed/universal_text_field.dart';
 import 'auth_type.dart';
@@ -78,6 +80,10 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   void dispose() {
+    _firstNameController.removeListener(_validateForm);
+    _lastNameController.removeListener(_validateForm);
+    _emailController.removeListener(_validateForm);
+    _passwordController.removeListener(_validatePassword);
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -88,8 +94,17 @@ class _RegisterViewState extends State<RegisterView> {
   void _register() async {
     setState(() => _isLoading = true);
 
-    // TODO: вызов AuthService.register(...)
-    await Future.delayed(const Duration(seconds: 1)); // заглушка
+    final ok = await context.read<AuthProvider>().register(
+      name:
+          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+    if (!ok && mounted) {
+      final msg =
+          context.read<AuthProvider>().lastError ?? 'Registration failed';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
 
     setState(() => _isLoading = false);
   }

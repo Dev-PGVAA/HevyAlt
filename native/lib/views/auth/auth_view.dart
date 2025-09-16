@@ -18,6 +18,15 @@ class _AuthViewState extends State<AuthView> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to keyboard visibility changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+      final newKeyboardState = keyboardHeight > 0;
+      if (newKeyboardState != _keyboardIsShown) {
+        setState(() => _keyboardIsShown = newKeyboardState);
+      }
+    });
+
     return Stack(
       children: [
         Column(
@@ -31,7 +40,27 @@ class _AuthViewState extends State<AuthView> {
             const Spacer(),
           ],
         ),
-        if (_keyboardIsShown) Container(color: Colors.black.withOpacity(0.4)),
+        if (_keyboardIsShown)
+          Container(color: Colors.black.withValues(alpha: 0.7)),
+        Positioned(
+          top: 50,
+          left: 20,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: IconButton(
+              onPressed: () {
+                print("Language button pressed");
+              },
+              padding: const EdgeInsets.all(8),
+              splashColor: Colors.white.withValues(alpha: 0.2),
+              highlightColor: Colors.white.withValues(alpha: 0.1),
+              icon: const Icon(Icons.language, color: Colors.white, size: 24),
+            ),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(
             left: 40,

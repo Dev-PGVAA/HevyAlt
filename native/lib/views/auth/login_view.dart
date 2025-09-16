@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/auth_provider.dart';
 import '../../widgets/text_filed/universal_text_field.dart';
 import 'auth_type.dart';
 
@@ -23,6 +25,7 @@ class _LoginViewState extends State<LoginView> {
   void initState() {
     super.initState();
     _passwordController.addListener(_validatePassword);
+    _emailController.addListener(_onFieldsChanged);
   }
 
   void _validatePassword() {
@@ -39,6 +42,20 @@ class _LoginViewState extends State<LoginView> {
         _passwordErrorMessage = null;
       });
     }
+  }
+
+  void _onFieldsChanged() {
+    // Форсируем пересборку, чтобы активировать/деактивировать кнопку
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _emailController.removeListener(_onFieldsChanged);
+    _passwordController.removeListener(_validatePassword);
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -61,10 +78,21 @@ class _LoginViewState extends State<LoginView> {
                   _emailController.text.isEmpty ||
                   _passwordController.text.isEmpty
               ? null
-              : () {
+              : () async {
                   setState(() => _isLoading = true);
-                  // Implement login action with AuthService
+                  final ok = await context.read<AuthProvider>().login(
+                    email: _emailController.text.trim(),
+                    password: _passwordController.text,
+                  );
                   setState(() => _isLoading = false);
+                  if (!ok && mounted) {
+                    final msg =
+                        context.read<AuthProvider>().lastError ??
+                        'Login failed';
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(msg)));
+                  }
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,

@@ -105,10 +105,11 @@ class _TextFieldComponentState extends State<TextFieldComponent>
                       controller: widget.controller,
                       obscureText: widget.isSecure && !isTextVisible,
                       style: const TextStyle(color: Colors.white),
+                      autocorrect: false,
                       decoration: InputDecoration(
                         hintText: widget.placeholder,
                         hintStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(

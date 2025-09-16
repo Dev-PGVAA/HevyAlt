@@ -78,11 +78,13 @@ export class AuthService {
 		const expiresIn = new Date()
 		expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
 
+		// Dev-friendly cookie (HTTP, no fixed domain). Consider using HTTPS + sameSite 'none' + secure=true in production
 		res.cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
 			httpOnly: true,
-			domain: 'localhost',
-			secure: true,
-			sameSite: 'none'
+			path: '/',
+			secure: false,
+			sameSite: 'lax',
+			expires: expiresIn
 		})
 	}
 
@@ -101,14 +103,12 @@ export class AuthService {
 	}
 
 	removeRefreshTokenToResponse(res: Response) {
-		const expiresIn = new Date()
-
 		res.cookie(this.REFRESH_TOKEN_NAME, '', {
 			httpOnly: true,
-			domain: 'localhost',
+			path: '/',
 			expires: new Date(0),
-			secure: true,
-			sameSite: 'none'
+			secure: false,
+			sameSite: 'lax'
 		})
 	}
 }

@@ -31,12 +31,16 @@ class MainAuthView extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.5))),
+            Expanded(
+              child: Divider(color: Colors.white.withValues(alpha: 0.5)),
+            ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Text("or", style: TextStyle(color: Colors.white)),
             ),
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.5))),
+            Expanded(
+              child: Divider(color: Colors.white.withValues(alpha: 0.5)),
+            ),
           ],
         ),
         const SizedBox(height: 12),
