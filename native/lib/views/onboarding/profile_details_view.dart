@@ -3,6 +3,18 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 
+// Function to show the non-dismissible bottom sheet
+void showProfileDetailsBottomSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isDismissible: false, // Prevent dismissal by tapping outside
+    enableDrag: false, // Prevent dismissal by dragging
+    isScrollControlled: true, // Allow full-screen content
+    backgroundColor: Colors.transparent,
+    builder: (context) => const ProfileDetailsView(),
+  );
+}
+
 class ProfileDetailsView extends StatefulWidget {
   const ProfileDetailsView({super.key});
 
@@ -11,41 +23,39 @@ class ProfileDetailsView extends StatefulWidget {
 }
 
 class _ProfileDetailsViewState extends State<ProfileDetailsView> {
-  // Храним значения в метрике
   double _heightCm = 175;
   double _weightKg = 70;
-  String _heightUnit = 'cm'; // cm | ft
-  String _weightUnit = 'kg'; // kg | lb
-
-  String? _goal; // похудение | набор | поддержание
+  String _heightUnit = 'cm';
+  String _weightUnit = 'kg';
+  String? _goal;
   int _currentStep = 0;
   bool _isSaving = false;
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
 
   @override
   void initState() {
     super.initState();
-    // Можно подтянуть дефолтные значения из профиля при наличии
+    _heightController = TextEditingController(
+      text: _heightUnit == 'cm'
+          ? _heightCm.toStringAsFixed(0)
+          : _cmToIn(_heightCm).toStringAsFixed(1),
+    );
+    _weightController = TextEditingController(
+      text: _weightUnit == 'kg'
+          ? _weightKg.toStringAsFixed(1)
+          : _kgToLb(_weightKg).toStringAsFixed(1),
+    );
   }
 
   @override
   void dispose() {
+    _heightController.dispose();
+    _weightController.dispose();
     super.dispose();
   }
 
-  bool get _canProceed {
-    if (_currentStep == 0) {
-      return _heightCm >= 120 && _heightCm <= 220;
-    }
-    if (_currentStep == 1) {
-      return _weightKg >= 40 && _weightKg <= 200;
-    }
-    if (_currentStep == 2) {
-      return _goal != null && _goal!.isNotEmpty;
-    }
-    return false;
-  }
-
-  // Конвертации
+  // Conversions
   double _kgToLb(double kg) => kg * 2.2046226218;
   double _lbToKg(double lb) => lb / 2.2046226218;
   double _cmToIn(double cm) => cm / 2.54;
@@ -53,19 +63,23 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
 
   String _formatHeight() {
     if (_heightUnit == 'cm') {
-      return '${_heightCm.toStringAsFixed(0)} cm';
+      return _heightCm.toStringAsFixed(0);
     }
-    final totalIn = _cmToIn(_heightCm);
-    final feet = totalIn ~/ 12;
-    final inches = (totalIn - feet * 12).round();
-    return "${feet}' ${inches}\"";
+    return _cmToIn(_heightCm).toStringAsFixed(1);
   }
 
   String _formatWeight() {
     if (_weightUnit == 'kg') {
-      return '${_weightKg.toStringAsFixed(1)} kg';
+      return _weightKg.toStringAsFixed(1);
     }
-    return '${_kgToLb(_weightKg).toStringAsFixed(1)} lb';
+    return _kgToLb(_weightKg).toStringAsFixed(1);
+  }
+
+  bool get _canProceed {
+    if (_currentStep == 0) return _heightCm >= 120 && _heightCm <= 220;
+    if (_currentStep == 1) return _weightKg >= 40 && _weightKg <= 200;
+    if (_currentStep == 2) return _goal != null && _goal!.isNotEmpty;
+    return false;
   }
 
   void _next() {
@@ -84,11 +98,13 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
 
   Future<void> _save() async {
     setState(() => _isSaving = true);
-    // TODO: вызвать API обновления профиля с ростом/весом/целью
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
     context.read<AuthProvider>().markProfileCompleted();
     setState(() => _isSaving = false);
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Widget _buildHeader() {
@@ -141,13 +157,41 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                       color: const Color(0xFF1A1A1A),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      _formatHeight(),
+                    child: TextField(
+                      controller: _heightController,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Enter height',
+                        hintStyle: TextStyle(color: Colors.white38),
+                      ),
+                      onChanged: (value) {
+                        if (value.isEmpty) return; // Ignore empty input
+                        final double? newValue = double.tryParse(value);
+                        if (newValue != null) {
+                          setState(() {
+                            _heightCm = _heightUnit == 'cm'
+                                ? newValue
+                                : _inToCm(newValue);
+                          });
+                        }
+                      },
+                      onEditingComplete: () {
+                        setState(() {
+                          _heightController.text = _formatHeight();
+                          _heightController
+                              .selection = TextSelection.fromPosition(
+                            TextPosition(offset: _heightController.text.length),
+                          );
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -156,7 +200,15 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                   isSelected: [_heightUnit == 'cm', _heightUnit == 'ft'],
                   onPressed: (i) {
                     setState(() {
-                      _heightUnit = i == 0 ? 'cm' : 'ft';
+                      final newUnit = i == 0 ? 'cm' : 'ft';
+                      if (newUnit != _heightUnit) {
+                        _heightUnit = newUnit;
+                        _heightController.text = _formatHeight();
+                        _heightController
+                            .selection = TextSelection.fromPosition(
+                          TextPosition(offset: _heightController.text.length),
+                        );
+                      }
                     });
                   },
                   borderRadius: BorderRadius.circular(10),
@@ -171,115 +223,9 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Builder(
-              builder: (context) {
-                const int minCm = 120;
-                const int maxCm = 220;
-                final bool isFt = _heightUnit == 'ft';
-                if (!isFt) {
-                  // Колесо для сантиметров (целые значения)
-                  final List<int> values = List.generate(
-                    maxCm - minCm + 1,
-                    (i) => minCm + i,
-                  );
-                  final int initialIndex = (_heightCm.round() - minCm).clamp(
-                    0,
-                    values.length - 1,
-                  );
-                  final controller = FixedExtentScrollController(
-                    initialItem: initialIndex,
-                  );
-                  return SizedBox(
-                    height: 180,
-                    child: ListWheelScrollView.useDelegate(
-                      controller: controller,
-                      itemExtent: 42,
-                      physics: const FixedExtentScrollPhysics(),
-                      perspective: 0.0025,
-                      diameterRatio: 2.0,
-                      useMagnifier: true,
-                      magnification: 1.15,
-                      onSelectedItemChanged: (i) {
-                        setState(() {
-                          _heightCm = values[i].toDouble();
-                        });
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) {
-                          if (index < 0 || index >= values.length) return null;
-                          final v = values[index];
-                          return Center(
-                            child: Text(
-                              '$v cm',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                } else {
-                  // Колесо для футов/дюймов (храним см, крутим дюймы)
-                  final int minIn = _cmToIn(minCm.toDouble()).round();
-                  final int maxIn = _cmToIn(maxCm.toDouble()).round();
-                  final List<int> inches = List.generate(
-                    maxIn - minIn + 1,
-                    (i) => minIn + i,
-                  );
-                  final int initialIndex = (_cmToIn(_heightCm).round() - minIn)
-                      .clamp(0, inches.length - 1);
-                  final controller = FixedExtentScrollController(
-                    initialItem: initialIndex,
-                  );
-                  String fmt(int totalIn) {
-                    final feet = totalIn ~/ 12;
-                    final inch = totalIn - feet * 12;
-                    return "${feet}' ${inch}\"";
-                  }
-
-                  return SizedBox(
-                    height: 180,
-                    child: ListWheelScrollView.useDelegate(
-                      controller: controller,
-                      itemExtent: 42,
-                      physics: const FixedExtentScrollPhysics(),
-                      perspective: 0.0025,
-                      diameterRatio: 2.0,
-                      useMagnifier: true,
-                      magnification: 1.15,
-                      onSelectedItemChanged: (i) {
-                        setState(() {
-                          _heightCm = _inToCm(inches[i].toDouble());
-                        });
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) {
-                          if (index < 0 || index >= inches.length) return null;
-                          final v = inches[index];
-                          return Center(
-                            child: Text(
-                              fmt(v),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
           ],
         );
+
       case 1:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,13 +244,41 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                       color: const Color(0xFF1A1A1A),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      _formatWeight(),
+                    child: TextField(
+                      controller: _weightController,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Enter weight',
+                        hintStyle: TextStyle(color: Colors.white38),
+                      ),
+                      onChanged: (value) {
+                        if (value.isEmpty) return; // Ignore empty input
+                        final double? newValue = double.tryParse(value);
+                        if (newValue != null) {
+                          setState(() {
+                            _weightKg = _weightUnit == 'kg'
+                                ? newValue
+                                : _lbToKg(newValue);
+                          });
+                        }
+                      },
+                      onEditingComplete: () {
+                        setState(() {
+                          _weightController.text = _formatWeight();
+                          _weightController
+                              .selection = TextSelection.fromPosition(
+                            TextPosition(offset: _weightController.text.length),
+                          );
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -313,7 +287,15 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                   isSelected: [_weightUnit == 'kg', _weightUnit == 'lb'],
                   onPressed: (i) {
                     setState(() {
-                      _weightUnit = i == 0 ? 'kg' : 'lb';
+                      final newUnit = i == 0 ? 'kg' : 'lb';
+                      if (newUnit != _weightUnit) {
+                        _weightUnit = newUnit;
+                        _weightController.text = _formatWeight();
+                        _weightController
+                            .selection = TextSelection.fromPosition(
+                          TextPosition(offset: _weightController.text.length),
+                        );
+                      }
                     });
                   },
                   borderRadius: BorderRadius.circular(10),
@@ -328,108 +310,9 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Builder(
-              builder: (context) {
-                final bool isLb = _weightUnit == 'lb';
-                if (!isLb) {
-                  // Колесо для кг с шагом 0.5
-                  const double minKg = 40;
-                  const double maxKg = 200;
-                  final int count = (((maxKg - minKg) / 0.5).round()) + 1;
-                  final List<double> values = List.generate(
-                    count,
-                    (i) => (minKg + i * 0.5),
-                  );
-                  final int initialIndex = (((_weightKg - minKg) / 0.5).round())
-                      .clamp(0, values.length - 1);
-                  final controller = FixedExtentScrollController(
-                    initialItem: initialIndex,
-                  );
-                  return SizedBox(
-                    height: 180,
-                    child: ListWheelScrollView.useDelegate(
-                      controller: controller,
-                      itemExtent: 42,
-                      physics: const FixedExtentScrollPhysics(),
-                      perspective: 0.0025,
-                      diameterRatio: 2.0,
-                      useMagnifier: true,
-                      magnification: 1.15,
-                      onSelectedItemChanged: (i) {
-                        setState(() {
-                          _weightKg = values[i];
-                        });
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) {
-                          if (index < 0 || index >= values.length) return null;
-                          final v = values[index];
-                          return Center(
-                            child: Text(
-                              '${v.toStringAsFixed(1)} kg',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                } else {
-                  // Колесо для фунтов, шаг 1 lb
-                  final int minLb = _kgToLb(40).round();
-                  final int maxLb = _kgToLb(200).round();
-                  final List<int> values = List.generate(
-                    maxLb - minLb + 1,
-                    (i) => minLb + i,
-                  );
-                  final int initialIndex = (_kgToLb(_weightKg).round() - minLb)
-                      .clamp(0, values.length - 1);
-                  final controller = FixedExtentScrollController(
-                    initialItem: initialIndex,
-                  );
-                  return SizedBox(
-                    height: 180,
-                    child: ListWheelScrollView.useDelegate(
-                      controller: controller,
-                      itemExtent: 42,
-                      physics: const FixedExtentScrollPhysics(),
-                      perspective: 0.0025,
-                      diameterRatio: 2.0,
-                      useMagnifier: true,
-                      magnification: 1.15,
-                      onSelectedItemChanged: (i) {
-                        setState(() {
-                          _weightKg = _lbToKg(values[i].toDouble());
-                        });
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) {
-                          if (index < 0 || index >= values.length) return null;
-                          final v = values[index];
-                          return Center(
-                            child: Text(
-                              '$v lb',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
           ],
         );
+
       case 2:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,6 +354,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
             ),
           ],
         );
+
       default:
         return const SizedBox.shrink();
     }

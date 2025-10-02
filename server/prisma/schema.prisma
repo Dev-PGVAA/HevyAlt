@@ -19,9 +19,109 @@ model User {
   avatar   String?  @default("http://localhost:4200/uploads/default_avatar.jpeg") //change after deploy
   birthday DateTime @default(now())
   role     Role     @default(USER)
-  sex      Sex      @default(NOT_SPECIFICATED)
+  sex      Sex      @default(NOT_SPECIFIED)
+
+  measures Measures[]
+  exercise Exercise[]
 
   @@map("user")
+}
+
+model Measures {
+  id        String   @id @default(uuid())
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  TypeOfMeasure Measure @map("type_of_measure")
+  measure       Float?
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("measures")
+}
+
+model Exercise {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name        String
+  description String?
+
+  PrimaryMuscleGroup MuscleGroup[] @map("primary_muscle_group")
+  OtherMuscles       MuscleGroup[] @map("other_muscles")
+  equipment          Equipment
+  ExerciseType       ExerciseType  @map("exercise_type")
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@map("exercise")
+}
+
+enum Equipment {
+  NONE
+  BARBELL
+  DUMBBELL
+  KETTLEBELL
+  MACHINE
+  PLATE
+  RESISTANCE_BAND
+  SUSPENSION_BAND
+  OTHER
+}
+
+enum MuscleGroup {
+  ABDOMINALS
+  ABDUCTORS
+  ADDUCTORS
+  BICEPS
+  CALVES
+  CARDIO
+  CHEST
+  FOREARMS
+  FULL_BODY
+  GLUTES
+  HAMSTRINGS
+  LATS
+  LOWER_BACK
+  NECK
+  QUADRICEPS
+  SHOULDERS
+  TRAPS
+  TRICEPS
+  UPPER_BACK
+  OTHER
+}
+
+enum ExerciseType {
+  WEIGHT_REPS
+  BODYWEIGHT_REPS
+  WEIGHTED_BODYWEIGHT
+  ASSISTED_BODYWEIGHT
+  DURATION
+  DURATION_WEIGHT
+  DISTANCE_DURATION
+  WEIGHT_DISTANCE
+}
+
+enum Measure {
+  HEIGHT
+  WEIGHT
+  BODY_FAT
+  NECK
+  SHOULDER
+  CHEST
+  LEFT_BICEP
+  RIGHT_BICEP
+  LEFT_FOREARM
+  RIGHT_FOREARM
+  ABDOMEN
+  HIPS
+  LEFT_THIGH
+  RIGHT_THIGH
+  LEFT_CALF
+  RIGHT_CALF
 }
 
 enum Role {
@@ -31,7 +131,7 @@ enum Role {
 }
 
 enum Sex {
-  NOT_SPECIFICATED
+  NOT_SPECIFIED
   MALE
   FEMALE
 }

@@ -8,10 +8,10 @@ import { MediaService } from './media.service'
 	imports: [
 		ServeStaticModule.forRoot({
 			rootPath: `${path}/uploads`,
-			serveRoot: '/uploads',
-		}),
+			serveRoot: '/uploads'
+		})
 	],
 	controllers: [MediaController],
-	providers: [MediaService],
+	providers: [MediaService]
 })
 export class MediaModule {}

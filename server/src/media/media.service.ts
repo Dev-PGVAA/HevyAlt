@@ -29,7 +29,7 @@ export class MediaService {
 
 			responses.push({
 				url: `/uploads/${folderLowerCase}/${uniqueFileName}`,
-				name: uniqueFileName,
+				name: uniqueFileName
 			})
 		}
 

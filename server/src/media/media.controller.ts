@@ -5,7 +5,7 @@ import {
 	Query,
 	UploadedFiles,
 	UseInterceptors,
-	UsePipes,
+	UsePipes
 } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { IFile } from './media.interface'
