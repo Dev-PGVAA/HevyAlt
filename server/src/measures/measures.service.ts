@@ -11,6 +11,7 @@ export class MeasuresService {
 		const measure = await this.prisma.measures.create({
 			data: {
 				...dto,
+				typeOfMeasure: dto.TypeOfMeasure, // исправлено на правильный ключ
 				user: {
 					connect: {
 						id: userId
@@ -26,7 +27,7 @@ export class MeasuresService {
 		const measures = await this.prisma.measures.findMany({
 			where: { userId },
 			select: {
-				TypeOfMeasure: true,
+				typeOfMeasure: true,
 				measure: true,
 				updatedAt: true
 			},
@@ -37,7 +38,7 @@ export class MeasuresService {
 			.filter(key => isNaN(Number(key))) // Исключаем числовые ключи
 			.reduce((acc, measureName) => {
 				const userMeasures = measures.filter(
-					m => m.TypeOfMeasure === measureName
+					m => m.typeOfMeasure === measureName
 				)
 
 				acc[measureName] = {

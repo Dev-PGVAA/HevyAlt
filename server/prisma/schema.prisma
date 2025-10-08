@@ -23,20 +23,33 @@ model User {
 
   measures Measures[]
   exercise Exercise[]
+  workouts Workout[]
 
+  // Индексы для оптимизации запросов
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
   @@map("user")
 }
 
 model Measures {
   id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at") // Добавлено для отслеживания времени создания замера
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  TypeOfMeasure Measure @map("type_of_measure")
-  measure       Float?
+  typeOfMeasure Measure @map("type_of_measure")
+  measure       Float
 
   userId String @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Составной уникальный индекс для предотвращения дублирования замеров одного типа в один день
+  // @@unique([userId, typeOfMeasure, measureDate])
+  // Индексы для оптимизации запросов по пользователю и типу замера
+  @@index([userId])
+  @@index([userId, typeOfMeasure])
+  @@index([userId, createdAt])
+  @@index([typeOfMeasure])
   @@map("measures")
 }
 
@@ -48,15 +61,130 @@ model Exercise {
   name        String
   description String?
 
-  PrimaryMuscleGroup MuscleGroup[] @map("primary_muscle_group")
-  OtherMuscles       MuscleGroup[] @map("other_muscles")
+  primaryMuscleGroup MuscleGroup[] @map("primary_muscle_group")
+  otherMuscles       MuscleGroup[] @map("other_muscles")
   equipment          Equipment
-  ExerciseType       ExerciseType  @map("exercise_type")
+  exerciseType       ExerciseType  @map("exercise_type")
 
   userId String? @map("user_id")
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  workoutExercises WorkoutExercise[]
+
+  // Индексы для оптимизации поиска упражнений
+  @@index([name])
+  @@index([equipment])
+  @@index([exerciseType])
+  @@index([userId])
+  @@index([primaryMuscleGroup])
   @@map("exercise")
+}
+
+model Workout {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name         String
+  description  String?
+  date         DateTime  @default(now())
+  startTime    DateTime? @map("start_time") // Добавлено для времени начала тренировки
+  endTime      DateTime? @map("end_time") // Добавлено для времени окончания тренировки
+  duration     Int? // в секундах
+  calories     Int?
+  heartRate    Int?
+  maxHeartRate Int?      @map("max_heart_rate") // Добавлено для максимального пульса
+  volume       Float? // изменено на Float для более точных расчетов
+  sets         Int?
+  rating       Int? // Добавлено для оценки тренировки (1-5)
+  notes        String? // Добавлено для заметок к тренировке
+
+  workoutExercises WorkoutExercise[]
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Индексы для оптимизации запросов
+  @@index([userId])
+  @@index([userId, date])
+  @@index([date])
+  @@map("workout")
+}
+
+model WorkoutExercise {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  order         Int     @default(1) // порядок упражнения в тренировке
+  restTime      Int?    @map("rest_time") // время отдыха после упражнения в секундах
+  notes         String? // заметки к упражнению
+  setType       SetType @default(NORMAL) @map("set_type") // тип сета (обычный, суперсет, дропсет)
+  supersetGroup String? @map("superset_group") // группа для суперсетов (упражнения с одинаковым значением выполняются подряд)
+  isCompleted   Boolean @default(false) @map("is_completed") // Добавлено для отслеживания завершенности упражнения
+
+  workoutSets WorkoutSet[]
+
+  workoutId String  @map("workout_id")
+  workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  exerciseId String   @map("exercise_id")
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+
+  // Индексы для оптимизации
+  @@index([workoutId])
+  @@index([exerciseId])
+  @@index([workoutId, order])
+  @@index([supersetGroup])
+  @@map("workout_exercise")
+}
+
+model WorkoutSet {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  setNumber     Int     @map("set_number") // номер подхода
+  reps          Int? // количество повторений
+  weight        Float? // вес в кг
+  duration      Int? // продолжительность в секундах (для упражнений на время)
+  distance      Float? // дистанция в метрах
+  restTime      Int?    @map("rest_time") // время отдыха после подхода в секундах
+  rpe           Float? // Rate of Perceived Exertion (1-10)
+  notes         String? // заметки к подходу
+  isDropSet     Boolean @default(false) @map("is_drop_set") // является ли дропсетом
+  dropSetWeight Float?  @map("drop_set_weight") // вес для дропсета
+  dropSetReps   Int?    @map("drop_set_reps") // повторения для дропсета
+  isCompleted   Boolean @default(false) @map("is_completed") // выполнен ли подход
+
+  // Добавлены поля для более детального отслеживания
+  targetReps   Int?   @map("target_reps") // планируемое количество повторений
+  targetWeight Float? @map("target_weight") // планируемый вес
+
+  workoutExerciseId String          @map("workout_exercise_id")
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  // Индексы для оптимизации
+  @@index([workoutExerciseId])
+  @@index([workoutExerciseId, setNumber])
+  @@index([isCompleted])
+  @@map("workout_set")
+}
+
+// Добавлен новый enum для уровня сложности
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SetType {
+  NORMAL
+  SUPERSET
+  DROPSET
+  CLUSTER // Добавлен кластерный сет
+  REST_PAUSE // Добавлен рест-пауза
 }
 
 enum Equipment {
@@ -68,6 +196,8 @@ enum Equipment {
   PLATE
   RESISTANCE_BAND
   SUSPENSION_BAND
+  CABLE
+  SMITH_MACHINE
   OTHER
 }
 
@@ -103,12 +233,14 @@ enum ExerciseType {
   DURATION_WEIGHT
   DISTANCE_DURATION
   WEIGHT_DISTANCE
+  CARDIO // Добавлен отдельный тип для кардио
 }
 
 enum Measure {
   HEIGHT
   WEIGHT
   BODY_FAT
+  MUSCLE_MASS // Добавлена мышечная масса
   NECK
   SHOULDER
   CHEST
@@ -117,6 +249,7 @@ enum Measure {
   LEFT_FOREARM
   RIGHT_FOREARM
   ABDOMEN
+  WAIST // Добавлена талия
   HIPS
   LEFT_THIGH
   RIGHT_THIGH
@@ -127,7 +260,7 @@ enum Measure {
 enum Role {
   USER
   PREMIUM
-  ADMIN
+  ADMIN2
 }
 
 enum Sex {

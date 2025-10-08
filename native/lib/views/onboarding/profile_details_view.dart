@@ -27,7 +27,6 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   double _weightKg = 70;
   String _heightUnit = 'cm';
   String _weightUnit = 'kg';
-  String? _goal;
   int _currentStep = 0;
   bool _isSaving = false;
   late TextEditingController _heightController;
@@ -78,13 +77,12 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   bool get _canProceed {
     if (_currentStep == 0) return _heightCm >= 120 && _heightCm <= 220;
     if (_currentStep == 1) return _weightKg >= 40 && _weightKg <= 200;
-    if (_currentStep == 2) return _goal != null && _goal!.isNotEmpty;
     return false;
   }
 
   void _next() {
     if (!_canProceed) return;
-    if (_currentStep < 2) {
+    if (_currentStep < 1) {
       setState(() => _currentStep += 1);
     } else {
       _save();
@@ -121,19 +119,6 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
         ),
         SizedBox(height: 12),
       ],
-    );
-  }
-
-  InputDecoration _fieldDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-      filled: true,
-      fillColor: const Color(0xFF1A1A1A),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
     );
   }
 
@@ -313,55 +298,13 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
           ],
         );
 
-      case 2:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Цель тренировок',
-              style: TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _goal,
-              dropdownColor: const Color(0xFF1A1A1A),
-              items: const [
-                DropdownMenuItem(
-                  value: 'lose',
-                  child: Text(
-                    'Похудение',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: 'gain',
-                  child: Text(
-                    'Набор массы',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: 'maintain',
-                  child: Text(
-                    'Поддержание',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-              onChanged: (v) => setState(() => _goal = v),
-              decoration: _fieldDecoration('Выберите цель'),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        );
-
       default:
         return const SizedBox.shrink();
     }
   }
 
   Widget _controls() {
-    final isLast = _currentStep == 2;
+    final isLast = _currentStep == 1;
     return Row(
       children: [
         if (_currentStep > 0)
@@ -423,12 +366,12 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
             _buildHeader(),
             const SizedBox(height: 8),
             Row(
-              children: List.generate(3, (i) {
+              children: List.generate(2, (i) {
                 final active = i <= _currentStep;
                 return Expanded(
                   child: Container(
                     height: 4,
-                    margin: EdgeInsets.only(right: i == 2 ? 0 : 6),
+                    margin: EdgeInsets.only(right: i == 1 ? 0 : 6),
                     decoration: BoxDecoration(
                       color: active ? Colors.white : Colors.white24,
                       borderRadius: BorderRadius.circular(2),
