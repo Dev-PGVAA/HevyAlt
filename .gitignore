@@ -29,6 +29,9 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
+# AI
+__pycache__/
+
 # macOS
 .DS_Store
 
