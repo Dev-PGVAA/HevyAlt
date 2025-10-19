@@ -5,6 +5,8 @@
 ![AI Powered](https://img.shields.io/badge/AI-Powered-purple?logo=openai)
 ![License](https://img.shields.io/badge/License-HPUL--1.0-blue)
 
+Все необходимые файлы для проектной деятельности находятся в папке **[project-info](./project%20-%20info)**.
+
 **Hevy Workout App Alternative** — открытое приложение для отслеживания тренировок, вдохновлённое популярным Hevy Workout App.  
 Проект создан для спортсменов и энтузиастов, которые хотят гибко управлять тренировками, отслеживать прогресс и получать персональные рекомендации от AI.
 
@@ -28,7 +30,7 @@
 - Дневник питания и расчёт макросов
 - Замеры тела (вес, объёмы, фото, графики)
 - Общий дашборд со статистикой
-- **AI-советник по тренировкам и питанию**
+- AI-советник по тренировкам и питанию
 - Speech-to-Text голосовые заметки
 - Интеграция с Apple Watch и iOS-виджетами
 - Социальные функции и челленджи _(в планах)_
@@ -141,7 +143,7 @@ PR’ы приветствуются!
 
 This project is licensed under the **HevyAlt Personal Use License (HPUL-1.0)**.
 You may study and modify the source code for personal use, but redistribution or commercial use is prohibited.
-See the [LICENSE](./LICENSE) file for full details.
+See the **[LICENSE](./LICENSE)** file for full details.
 
 ---
 
