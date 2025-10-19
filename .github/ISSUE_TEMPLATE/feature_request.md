@@ -1,20 +1,43 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+name: 🚀 Feature request
+about: Предложите идею или улучшение для HevyAlt
+title: '[Feature]: '
+labels: enhancement
+assignees: Dev-PGVAA
+---
+
+## 💡 Что вы хотите добавить
+
+Опишите функцию, идею или улучшение.
+
+**Пример:**
+
+> Добавить режим “Тренировка с другом” с синхронизацией статистики в реальном времени.
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## 🤔 Почему это важно
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+Что именно решает эта функция, почему она нужна пользователям?
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+---
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## 🧠 Идеи реализации
+
+Если у вас есть предложения по UX, API или логике работы — опишите кратко.
+
+**Пример:**
+
+> Можно добавить новый экран `GroupWorkout` с Firebase-синхронизацией.
+
+---
+
+## 🖼 Макеты / скетчи (если есть)
+
+Прикрепите изображения или ссылки (Figma, Miro и т.д.)
+
+---
+
+## 🗒 Дополнительная информация
+
+Любые заметки, связанные с идеей или дальнейшими улучшениями.

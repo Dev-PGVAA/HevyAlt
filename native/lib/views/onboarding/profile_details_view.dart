@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../services/health_service.dart';
+import '../../widgets/health_permission_widget.dart';
 
 // Function to show the non-dismissible bottom sheet
 void showProfileDetailsBottomSheet(BuildContext context) {
@@ -77,12 +79,13 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   bool get _canProceed {
     if (_currentStep == 0) return _heightCm >= 120 && _heightCm <= 220;
     if (_currentStep == 1) return _weightKg >= 40 && _weightKg <= 200;
+    if (_currentStep == 2) return true; // Health permission step
     return false;
   }
 
   void _next() {
     if (!_canProceed) return;
-    if (_currentStep < 1) {
+    if (_currentStep < 2) {
       setState(() => _currentStep += 1);
     } else {
       _save();
@@ -92,6 +95,27 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
   void _back() {
     if (_currentStep == 0) return;
     setState(() => _currentStep -= 1);
+  }
+
+  void _onHealthDataReceived(HealthData healthData) {
+    setState(() {
+      if (healthData.height != null) {
+        _heightCm = healthData.height!;
+        _heightController.text = _formatHeight();
+      }
+      if (healthData.weight != null) {
+        _weightKg = healthData.weight!;
+        _weightController.text = _formatWeight();
+      }
+      // Автоматически переходим к следующему шагу
+      _currentStep = 0;
+    });
+  }
+
+  void _onHealthSkip() {
+    setState(() {
+      _currentStep += 1;
+    });
   }
 
   Future<void> _save() async {
@@ -298,12 +322,23 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
           ],
         );
 
+      case 2:
+        return HealthPermissionWidget(
+          onDataReceived: _onHealthDataReceived,
+          onSkip: _onHealthSkip,
+        );
+
       default:
         return const SizedBox.shrink();
     }
   }
 
   Widget _controls() {
+    // Скрываем кнопки на шаге Health permissions
+    if (_currentStep == 2) {
+      return const SizedBox.shrink();
+    }
+
     final isLast = _currentStep == 1;
     return Row(
       children: [
@@ -344,7 +379,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
                       ),
                     )
                   : Text(
-                      isLast ? 'Сохранить' : 'Далее',
+                      isLast ? 'Далее' : 'Далее',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
             ),
@@ -366,12 +401,12 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView> {
             _buildHeader(),
             const SizedBox(height: 8),
             Row(
-              children: List.generate(2, (i) {
+              children: List.generate(3, (i) {
                 final active = i <= _currentStep;
                 return Expanded(
                   child: Container(
                     height: 4,
-                    margin: EdgeInsets.only(right: i == 1 ? 0 : 6),
+                    margin: EdgeInsets.only(right: i == 2 ? 0 : 6),
                     decoration: BoxDecoration(
                       color: active ? Colors.white : Colors.white24,
                       borderRadius: BorderRadius.circular(2),
