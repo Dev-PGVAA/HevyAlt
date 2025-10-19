@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Приложение использует HealthKit для автоматического заполнения данных о росте и весе для более точных расчетов тренировок.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Приложение может записывать данные о тренировках в HealthKit для отслеживания прогресса.</string>
 </dict>
 </plist>
